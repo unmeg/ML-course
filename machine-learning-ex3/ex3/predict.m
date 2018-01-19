@@ -20,10 +20,14 @@ p = zeros(size(X, 1), 1);
 %       information see 'help max'. If your examples are in rows, then, you
 %       can use max(A, [], 2) to obtain the max for each row.
 %
+bias = ones(m, 1);
+a1 = horzcat(bias, X); % add a0
+a2 = sigmoid(a1 * Theta1');
+a2_biased = horzcat(bias, a2)
+a3 = sigmoid(a2_biased * Theta2')
 
-
-
-
+% h is gonna be the max
+[maxi, p] = max(a3, [], 2);
 
 
 
