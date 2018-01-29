@@ -31,95 +31,82 @@ Theta1_grad = zeros(size(Theta1));
 Theta2_grad = zeros(size(Theta2));
 
 % ====================== YOUR CODE HERE ======================
-% Instructions: You should complete the code by working through the
-%               following parts.
-%
-% Part 1: Feedforward the neural network and return the cost in the
-%         variable J. After implementing Part 1, you can verify that your
-%         cost function computation is correct by verifying the cost
-%         computed in ex4.m
 
-% Create the matrix that represents each class -- remember, we want 010000.... for '2' etc
-% Make an identity matrix!
-I = eye(num_labels);
-
-% Use it to get the y matrix
-y_expanded = I(y,:) 
-
-% forward prop (stolen from last week's exercise tbh)
+% add bias
 bias = ones(m, 1);
-a1 = horzcat(bias, X); % add a0
-a2 = sigmoid(a1 * Theta1');
-a2_biased = horzcat(bias, a2);
-a3 = sigmoid(a2_biased * Theta2');
-h = a3;
+x_biased = [bias, X];
 
-% Cost function
-% Given in pdf. Note that y_expanded isy^i_k and h is h_theta(x^i)_k...
-% vectorised blah blah.
+% roll out our classes
+I = eye(num_labels);
+y_spread = I(y,:);
 
-J = (1/m) * sum(sum(-1*y_expanded .* log(h) - (1 - y_expanded) .* log(1-h)));
+% massage thetas
+% no bias
+tm1 = Theta1(:,2:end);
+tm2 = Theta2(:,2:end);
 
-%
-% Part 2: Implement the backpropagation algorithm to compute the gradients
-%         Theta1_grad and Theta2_grad. You should return the partial derivatives of
-%         the cost function with respect to Theta1 and Theta2 in Theta1_grad and
-%         Theta2_grad, respectively. After implementing Part 2, you can check
-%         that your implementation is correct by running checkNNGradients
-%
-%         Note: The vector y passed into the function is a vector of labels
-%               containing values from 1..K. You need to map this vector into a 
-%               binary vector of 1's and 0's to be used with the neural network
-%               cost function.
-%
-%         Hint: We recommend implementing backpropagation using a for-loop
-%               over the training examples if you are implementing it for the 
-%               first time.
-%
+% forward prop
+z2 = x_biased * Theta1';
+a2 = [bias sigmoid(z2)]; % add bias
+
+z3 = a2 * Theta2';
+a3 = sigmoid(z3);
+
+% get output error
+d3 = a3 - y_spread;
+
+% fprintf(['Should be size of a3 and y.. Next 3 values should be same'])
+% size(a3)
+% size(y_spread)
+% size(d3) 
+
+% z2 should be m * n . n * h -> m x h
 % 
-% for i = 1:m
-%     forward prop xm
-%     back prop ym
-%     delta = theta' * delta(m + 1) .* (a.*(1-am)
+% fprintf(['Should be size of a1 height and theta width .. '])
+% size(x_biased)
+% size(Theta1)
+% size(z2) 
 
+% Theta2_nobias = Theta2(:,2:end); % remove bias
+% d2 = d3 * Theta2_nobias .* sigmoidGradient(z2); why does this wig out?
+d2_hold = d3 * tm2;
+d2 = d2_hold .* sigmoidGradient(z2);
 
-for i = 1:m
-    
-    
-    
-    
-% Part 3: Implement regularization with the cost function and gradients.
-%
-%         Hint: You can implement this around the code for
-%               backpropagation. That is, you can compute the gradients for
-%               the regularization separately and then add them to Theta1_grad
-%               and Theta2_grad from Part 2.
-%
+% fprintf(['Should be same size .. '])
+% size(z2)
+% size(d2)
 
-% Regularise cost but do not regularise bias terms!
+% Create our delta matrices
+DELTA_1 = zeros(size(Theta1));
+DELTA_2 = zeros(size(Theta2));
 
-% Remove the 1s
-theta1_fixed = Theta1(:,2:end);
-theta2_fixed = Theta2(:,2:end);
+% Do things to them
+% DELTA_1_COMPARE = x_biased' * d2;
+DELTA_1 = DELTA_1 + d2' * x_biased;
+% DELTA_2 = a2' * d3;
+DELTA_2 = DELTA_2 + d3' * a2;
 
-penalty = sum(sum(theta1_fixed.^2)) + sum(sum(theta2_fixed.^2))
+% gimme a vector of zeros -- will use this to account for when j = 0 
+insert_zero_1 = [ zeros(size(Theta1, 1), 1), tm1];
+insert_zero_2 = [ zeros(size(Theta2, 1), 1), tm2];
 
-% Calc the regularisation term (again, given in pdf)
-% We can just add this to our unregularised J above
-j_reg = lambda/(2*m) * penalty;
+% calc
+Theta1_grad = (1/m)*(DELTA_1 + (lambda/m * insert_zero_1));
+Theta2_grad = (1/m)*(DELTA_2 + (lambda/m * insert_zero_2));
 
+% Cost
+J = (-1/m)*(sum(sum((y_spread .* log(a3)  + (1 - y_spread) .* log(1-a3)),2)));
 
-% Add!
-J = J + j_reg;
+% regularise
+t1 = sum(sum(tm1.^2));
+t2 = sum(sum(tm2.^2));
 
+r = (lambda / (2*m)) * (t1 + t2)
 
+J = J + r;
 
-% -------------------------------------------------------------
-
-% =========================================================================
 
 % Unroll gradients
 grad = [Theta1_grad(:) ; Theta2_grad(:)];
-
 
 end
