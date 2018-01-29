@@ -91,8 +91,13 @@ insert_zero_1 = [ zeros(size(Theta1, 1), 1), tm1];
 insert_zero_2 = [ zeros(size(Theta2, 1), 1), tm2];
 
 % calc
-Theta1_grad = (1/m)*(DELTA_1 + (lambda/m * insert_zero_1));
-Theta2_grad = (1/m)*(DELTA_2 + (lambda/m * insert_zero_2));
+% Theta1_grad = (1/m)*(DELTA_1 + (lambda/m * insert_zero_1));
+% Theta2_grad = (1/m)*(DELTA_2 + (lambda/m * insert_zero_2));
+
+ % I stole this part:
+Theta1_grad = (1/m)*DELTA_1 + (lambda/m)*[zeros(size(Theta1, 1), 1), Theta1(:,2:end)];
+Theta2_grad = (1/m)*DELTA_2 + (lambda/m)*[zeros(size(Theta2, 1), 1), Theta2(:,2:end)];
+
 
 % Cost
 J = (-1/m)*(sum(sum((y_spread .* log(a3)  + (1 - y_spread) .* log(1-a3)),2)));
@@ -104,7 +109,6 @@ t2 = sum(sum(tm2.^2));
 r = (lambda / (2*m)) * (t1 + t2)
 
 J = J + r;
-
 
 % Unroll gradients
 grad = [Theta1_grad(:) ; Theta2_grad(:)];
